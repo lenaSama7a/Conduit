@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Security.Claims;
+using FluentValidation.Results;
+using Conduit.API.Validators;
+using FluentValidation;
 
 namespace Conduit.API.Controllers
 {
@@ -81,17 +84,16 @@ namespace Conduit.API.Controllers
             {
                 return BadRequest("This user name is already in use");
             }
-            if (!await _userRepository.ValidateEmail(user.Email,0))
-            {
-                return BadRequest("This email is already in use");
-            }
-            if (!_userRepository.ValidatePassword(user.Password))
-            {
-                return BadRequest("Your password must be:\n" +
-                    "At least one lower case or upper case letter,\r\nAt least special character,\r\nAt least one number\r\nAt least 8 characters length" +
-                    ".Please try another");
-            }
+
             var userToCreate = _mapper.Map<Conduit.Db.Entities.User>(user);
+            var validator = new UserValidator();
+            ValidationResult result = validator.Validate(userToCreate);
+
+            if (!result.IsValid)
+            {
+                var errorMessages = result.Errors.Select(e => e.ErrorMessage).ToList();
+                return BadRequest(errorMessages);
+            }
             await _userRepository.CreateUserAsync(userToCreate);
             var createdUserToReturn = _mapper.Map<Models.UserDto>(userToCreate);
 
@@ -110,20 +112,16 @@ namespace Conduit.API.Controllers
             var currentUser = GetCurrentUser();
             var userId = _userRepository.GetIdByUserName(currentUser.UserName);
 
-            if (!await _userRepository.ValidateEmail(user.Email, userId))
-            {
-                return BadRequest("This email is already in use");
-            }
-
-            if (!_userRepository.ValidatePassword(user.Password))
-            {
-                return BadRequest("Your password must be:\n" +
-                    "At least one lower case or upper case letter,\r\nAt least special character,\r\nAt least one number\r\nAt least 8 characters length" +
-                    ".Please try another");
-            }
-
-
             var userToUpdate = _mapper.Map<UserWithPasswordDto>(user);
+            var validator = new UserValidator();
+            var userForUpdate = _mapper.Map<User>(userToUpdate);
+            ValidationResult result = validator.Validate(userForUpdate);
+
+            if (!result.IsValid)
+            {
+                var errorMessages = result.Errors.Select(e => e.ErrorMessage).ToList();
+                return BadRequest(errorMessages);
+            }
             userToUpdate.Id = userId;
             userToUpdate.UserName = currentUser.UserName;
 
@@ -142,6 +140,15 @@ namespace Conduit.API.Controllers
             if (user == null)
             {
                 return NotFound();
+            }
+            var validator = new UserValidator();
+            var userForUpdate = _mapper.Map<User>(user);
+            ValidationResult result = validator.Validate(userForUpdate);
+
+            if (!result.IsValid)
+            {
+                var errorMessages = result.Errors.Select(e => e.ErrorMessage).ToList();
+                return BadRequest(errorMessages);
             }
 
             var userToPatch = _mapper.Map<UserForUpdateDto>(user);
