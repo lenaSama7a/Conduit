@@ -65,52 +65,6 @@ namespace Conduit.Db.Services
             }
             return true;
         }
-        public async Task<bool> ValidateEmail(string email, int userId)
-        {
-            if (await _context.Users.Where(c => c.Id != userId).AnyAsync(c => c.Email == email))
-            {
-                return false;
-            }
-            return true;
-        }
-        public bool ValidatePassword(string passWord)
-        {
-            if (passWord.Length < 8)
-                return false;
-            int validConditions = 0;
-            foreach (char c in passWord)
-            {
-                if (c >= 'a' && c <= 'z')
-                {
-                    validConditions++;
-                    break;
-                }
-            }
-            foreach (char c in passWord)
-            {
-                if (c >= 'A' && c <= 'Z')
-                {
-                    validConditions++;
-                    break;
-                }
-            }
-            if (validConditions == 0) return false;
-            foreach (char c in passWord)
-            {
-                if (c >= '0' && c <= '9')
-                {
-                    validConditions++;
-                    break;
-                }
-            }
-            if (validConditions == 1) return false;
-            if (validConditions == 2)
-            {
-                char[] special = { '@', '#', '$', '%', '^', '&', '+', '=' };    
-                if (passWord.IndexOfAny(special) == -1) return false;
-            }
-            return true;
-        }
 
         public List<int> FolloweesIDs(int userId)
         {

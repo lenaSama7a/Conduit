@@ -8,8 +8,6 @@ namespace Conduit.Db.Services
         Task<User?> GetUserByIdAsync(int userId, bool includeArticles);
         Task<User> CreateUserAsync(User user);
         Task<bool> ValidateuserName(string userName);
-        Task<bool> ValidateEmail(string email, int userId);
-        bool ValidatePassword(string passWord);
         Task<User> UpdateUserAsync(User user);
         int GetIdByUserName(string userName);
         Task DeleteUserAsync(int userId);
